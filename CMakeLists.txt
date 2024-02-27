@@ -89,7 +89,4 @@ endif()
 # Add sources
 # ###############################################################################
 add_subdirectory(src)
-
-if(BUILD_TEST)
-    add_subdirectory(test)
-endif()
+add_subdirectory(test)
