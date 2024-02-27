@@ -47,7 +47,8 @@ bool sovle_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
                       std::vector<char> *mask = nullptr,
                       Robustor robustor = RANSAC,
                       Sampler sampler = RANDOM_SAMPLE,
-                      std::vector<double> *priors = nullptr);
+                      std::vector<double> *priors = nullptr,
+                      const Eigen::Vector3d& scale_factors = {1.0, 1.0, 1.0});
 
 }  // namespace colpnp
 

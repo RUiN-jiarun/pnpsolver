@@ -13,7 +13,7 @@ bool sovle_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
                       double error_thres, double inlier_ratio,
                       double confidence, size_t max_iter,
                       std::vector<char> *mask, Robustor robustor,
-                      Sampler sampler, std::vector<double> *priors) {
+                      Sampler sampler, std::vector<double> *priors, const Eigen::Vector3d& scale_factors) {
     // CHECK(points2D.size() == points3D.size());
     if (points2D.size() < 4) {
         return false;
@@ -56,6 +56,10 @@ bool sovle_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
         return false;
     }
 
+    std::cout << "Estimate qvec: " << qvec.transpose() << std::endl;
+    std::cout << "Estimate tvec: " << tvec.transpose() << std::endl;
+    std::cout << "=========================================================" << std::endl;
+
     colmap::AbsolutePoseRefinementOptions refine_options;
     refine_options.refine_focal_length = false;
     refine_options.refine_extra_params = false;
@@ -63,7 +67,7 @@ bool sovle_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
     refine_options.print_summary = false;
 
     return colmap::RefineAbsolutePose(refine_options, *mask, points2D, points3D,
-                                      &qvec, &tvec, &camera);
+                                      &qvec, &tvec, &camera, scale_factors);
 }
 
 }  // namespace colpnp

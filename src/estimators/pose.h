@@ -161,7 +161,8 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
                         const std::vector<Eigen::Vector2d>& points2D,
                         const std::vector<Eigen::Vector3d>& points3D,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
-                        Camera* camera);
+                        Camera* camera,
+                        const Eigen::Vector3d& scale_factors = {1.0, 1.0, 1.0});
 
 }  // namespace colmap
 

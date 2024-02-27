@@ -311,7 +311,8 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
                         const std::vector<Eigen::Vector2d>& points2D,
                         const std::vector<Eigen::Vector3d>& points3D,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
-                        Camera* camera) {
+                        Camera* camera,
+                        const Eigen::Vector3d& scale_factors) {
     // CHECK_EQ(inlier_mask.size(), points2D.size());
     // CHECK_EQ(points2D.size(), points3D.size());
     options.Check();
@@ -324,6 +325,12 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
     double* tvec_data = tvec->data();
 
     std::vector<Eigen::Vector3d> points3D_copy = points3D;
+
+    for (auto & point : points3D_copy) {
+        point[0] *= scale_factors[0];
+        point[1] *= scale_factors[1];
+        point[2] *= scale_factors[2];
+    }
 
     ceres::Problem problem;
 
