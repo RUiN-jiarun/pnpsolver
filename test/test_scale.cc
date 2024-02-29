@@ -9,9 +9,9 @@
 
 int main(int argc, char** argv) {
 
-    std::ifstream point2Ds_file("../point2Ds.txt");
-    std::ifstream point3Ds_file("../point3Ds.txt");
-    std::ifstream priors_file("../priors.txt");
+    std::ifstream point2Ds_file("../example/D/point2Ds.txt");
+    std::ifstream point3Ds_file("../example/D/point3Ds.txt");
+    std::ifstream priors_file("../example/D/priors.txt");
 
     std::vector<Eigen::Vector2d> points2D;
     std::vector<Eigen::Vector3d> points3D;
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     std::cout << "GT tvec: " << gt_tvec.transpose() << std::endl;
     std::cout << "=========================================================" << std::endl;
 
-    Eigen::Vector3d scale_factors(0.85, 1.05, 1.0);
+    Eigen::Vector3d scale_factors(0.8, 1.05, 1.0);
     std::cout << "Scale factors: " << scale_factors.transpose() << std::endl;
     std::cout << "=========================================================" << std::endl;
 
