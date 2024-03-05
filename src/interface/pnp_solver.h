@@ -37,18 +37,19 @@ enum Robustor { RANSAC = 1, LORANSAC = 2 };
 // @param priors         When using weighted sampler
 //
 // @return               Whether the solution is usable.
-bool sovle_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
+bool solve_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
                       const std::vector<Eigen::Vector3d> &points3D,
                       const std::string &camera_model,
-                      const std::vector<double> &params, Eigen::Vector4d &qvec,
-                      Eigen::Vector3d &tvec, size_t &num_inlier,
+                      const std::vector<double> &params, const Eigen::Matrix4d& Tow, const Eigen::Vector3d& center,
+                      Eigen::Vector4d &qvec, Eigen::Vector3d &tvec, 
+                      Eigen::Vector3d& scale_factors, std::vector<bool>& fix_scale, size_t &num_inlier,
                       double error_thres = 8.0, double inlier_ratio = 0.1,
                       double confidence = 0.99, size_t max_iter = 10000,
                       std::vector<char> *mask = nullptr,
                       Robustor robustor = RANSAC,
                       Sampler sampler = RANDOM_SAMPLE,
-                      std::vector<double> *priors = nullptr,
-                      const Eigen::Vector3d& scale_factors = {1.0, 1.0, 1.0});
+                      std::vector<double> *priors = nullptr
+                      );
 
 }  // namespace colpnp
 

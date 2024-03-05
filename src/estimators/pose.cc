@@ -310,9 +310,11 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
                         const std::vector<char>& inlier_mask,
                         const std::vector<Eigen::Vector2d>& points2D,
                         const std::vector<Eigen::Vector3d>& points3D,
+                        const Eigen::Matrix4d& Tow,
+                        const Eigen::Vector3d& center,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
                         Camera* camera,
-                        const Eigen::Vector3d& scale_factors) {
+                        Eigen::Vector3d* scale_factors) {
     // CHECK_EQ(inlier_mask.size(), points2D.size());
     // CHECK_EQ(points2D.size(), points3D.size());
     options.Check();
@@ -323,14 +325,20 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
     double* camera_params_data = camera->ParamsData();
     double* qvec_data = qvec->data();
     double* tvec_data = tvec->data();
+    double* scale_factors_data = scale_factors->data();
 
     std::vector<Eigen::Vector3d> points3D_copy = points3D;
+    Eigen::Matrix4d Tow_ = Tow;
+    const double* data = Tow_.data();   // Column Major!
 
-    for (auto & point : points3D_copy) {
-        point[0] *= scale_factors[0];
-        point[1] *= scale_factors[1];
-        point[2] *= scale_factors[2];
-    }
+    Eigen::Matrix4d Tow_mat;
+    Tow_mat << data[0], data[4], data[8], data[12],
+            data[1], data[5], data[9], data[13],
+            data[2], data[6], data[10], data[14],
+            data[3], data[7], data[11], data[15];
+
+    Eigen::Matrix4d Two_ = Tow_.inverse();
+    Eigen::Vector3d center_ = center;
 
     ceres::Problem problem;
 
@@ -355,9 +363,17 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
         }
 
         problem.AddResidualBlock(cost_function, loss_function, qvec_data,
-                                 tvec_data, points3D_copy[i].data(),
+                                 tvec_data, points3D_copy[i].data(), scale_factors_data, Tow_.data(), Two_.data(), center_.data(),
                                  camera_params_data);
         problem.SetParameterBlockConstant(points3D_copy[i].data());
+        problem.SetParameterBlockConstant(Tow_.data());
+        problem.SetParameterBlockConstant(Two_.data());
+        problem.SetParameterBlockConstant(center_.data());
+
+        // TODO: fix some scale factor
+        // problem.AddParameterBlock(scale_factors_data, 1);
+        // problem.AddParameterBlock(scale_factors_data + 1, 2);
+        // problem.SetParameterBlockConstant(scale_factors_data);
     }
 
     if (problem.NumResiduals() > 0) {
@@ -404,6 +420,27 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
                         camera_params_const);
                 problem.SetParameterization(camera->ParamsData(),
                                             camera_params_parameterization);
+            }
+        }    
+    
+        // Scale parameterization
+        if (options.fix_x && options.fix_y && options.fix_z) {
+            problem.SetParameterBlockConstant(scale_factors_data);
+        } else {
+            if (options.fix_x) {
+                ceres::SubsetParameterization* scale_factors_paramterization = 
+                        new ceres::SubsetParameterization(3, std::vector<int>{0});
+                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
+            } 
+            if (options.fix_y) {
+                ceres::SubsetParameterization* scale_factors_paramterization = 
+                        new ceres::SubsetParameterization(3, std::vector<int>{1});
+                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
+            } 
+            if (options.fix_z) {
+                ceres::SubsetParameterization* scale_factors_paramterization = 
+                        new ceres::SubsetParameterization(3, std::vector<int>{2});
+                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
             }
         }
     }

@@ -49,18 +49,58 @@ class BundleAdjustmentCostFunction {
 
     static ceres::CostFunction* Create(const Eigen::Vector2d& point2D) {
         return (new ceres::AutoDiffCostFunction<
-                BundleAdjustmentCostFunction<CameraModel>, 2, 4, 3, 3,
-                CameraModel::kNumParams>(
-            new BundleAdjustmentCostFunction(point2D)));
+                BundleAdjustmentCostFunction<CameraModel>, 3, 4, 3, 3, 3, 16, 16, 3,
+                CameraModel::kNumParams>(new BundleAdjustmentCostFunction(point2D)));
     }
 
     template <typename T>
     bool operator()(const T* const qvec, const T* const tvec,
-                    const T* const point3D, const T* const camera_params,
-                    T* residuals) const {
+                    const T* const point3D, const T* const scale_factors, const T* const Tow, const T* const Two, const T* const center, 
+                    const T* const camera_params, T* residuals) const {
+        // Scale
+        // Two * Scale * Tow * Pw = Pw'
+        // Two: Eigen::Matrix4d
+        // Tow: Eigen::Matrix4d
+        // scale_factors: Eigen::Vector2d
+        // point3D: Eigen::Vector3d
+        Eigen::Matrix<T, 4, 4> Tow_mat;
+        Tow_mat << Tow[0], Tow[4], Tow[8], Tow[12],
+                Tow[1], Tow[5], Tow[9], Tow[13],
+                Tow[2], Tow[6], Tow[10], Tow[14],
+                Tow[3], Tow[7], Tow[11], Tow[15];
+
+        Eigen::Matrix<T, 4, 4> Two_mat;
+        Two_mat << Two[0], Two[4], Two[8], Two[12],
+                Two[1], Two[5], Two[9], Two[13],
+                Two[2], Two[6], Two[10], Two[14],
+                Two[3], Two[7], Two[11], Two[15];
+        // std::cout << Tow_mat << std::endl;
+        
+        Eigen::Matrix<T, 4, 1> point3D_homo;
+        point3D_homo << point3D[0], point3D[1], point3D[2], T(1);
+        Eigen::Matrix<T, 4, 1> center_homo;
+        center_homo << center[0], center[1], center[2], T(1);
+
+        Eigen::Matrix<T, 4, 1> point3D_object = Tow_mat * point3D_homo;
+        Eigen::Matrix<T, 4, 1> center_object = Tow_mat * center_homo;
+
+        Eigen::Matrix<T, 4, 1> scaled_point3D_object;
+        
+        scaled_point3D_object << scale_factors[0] * (point3D_object[0] - center_object[0]) + center_object[0],
+                                scale_factors[1] * (point3D_object[1] - center_object[1]) + center_object[1],
+                                scale_factors[2] * (point3D_object[2] - center_object[2]) + center_object[2],
+                                point3D_object[3];
+
+        Eigen::Matrix<T, 4, 1> point3D_world = Two_mat * scaled_point3D_object;
+        T point3D_transformed[3];
+        point3D_transformed[0] = static_cast<T>(point3D_world[0]);
+        point3D_transformed[1] = static_cast<T>(point3D_world[1]);
+        point3D_transformed[2] = static_cast<T>(point3D_world[2]);
+        
         // Rotate and translate.
         T projection[3];
-        ceres::UnitQuaternionRotatePoint(qvec, point3D, projection);
+        // ceres::UnitQuaternionRotatePoint(qvec, point3D, projection);
+        ceres::UnitQuaternionRotatePoint(qvec, point3D_transformed, projection);
         projection[0] += tvec[0];
         projection[1] += tvec[1];
         projection[2] += tvec[2];
@@ -76,6 +116,10 @@ class BundleAdjustmentCostFunction {
         // Re-projection error.
         residuals[0] -= T(observed_x_);
         residuals[1] -= T(observed_y_);
+
+        // Add constraint to encourage scale_factors to be close to (1.0, 1.0)
+        residuals[2] = scale_factors[0] * scale_factors[0] + scale_factors[1] * scale_factors[1] + scale_factors[2] * scale_factors[2] - T(3.0);
+        // residuals[3] = scale_factors[1] - T(1.0); 
 
         return true;
     }

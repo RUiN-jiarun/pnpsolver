@@ -41,16 +41,17 @@ add_compile_options(-O3)
 # ###############################################################################
 option(SIMD_ENABLED "Whether to enable SIMD optimizations" ON)
 option(OPENMP_ENABLED "Whether to enable OpenMP parallelization" ON)
+option(BUILD_PYTHON "Whether to enable python extension" ON)
 option(BUILD_TEST "Whether to enable test" OFF)
 
 # ###############################################################################
 # Find packages
 # ###############################################################################
 # when use for add_subdirectory(), need external install Ceres and Eigen3
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    find_package(Ceres REQUIRED)
-    find_package(Eigen3 REQUIRED)
-endif()
+# if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
+# endif()
 
 
 # ###############################################################################
@@ -89,4 +90,9 @@ endif()
 # Add sources
 # ###############################################################################
 add_subdirectory(src)
-add_subdirectory(test)
+
+if(NOT BUILD_PYTHON)
+    if(BUILD_TEST)
+        add_subdirectory(test)
+    endif()
+endif()

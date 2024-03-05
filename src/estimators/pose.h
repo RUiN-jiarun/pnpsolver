@@ -101,6 +101,11 @@ struct AbsolutePoseRefinementOptions {
     // Whether to refine the extra parameter group.
     bool refine_extra_params = true;
 
+    // Whether to refine 3D points scale.
+    bool fix_x = false;
+    bool fix_y = false;
+    bool fix_z = false;
+
     // Whether to print final summary.
     bool print_summary = true;
 
@@ -160,9 +165,11 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
                         const std::vector<char>& inlier_mask,
                         const std::vector<Eigen::Vector2d>& points2D,
                         const std::vector<Eigen::Vector3d>& points3D,
+                        const Eigen::Matrix4d& Tow,
+                        const Eigen::Vector3d& center,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
                         Camera* camera,
-                        const Eigen::Vector3d& scale_factors = {1.0, 1.0, 1.0});
+                        Eigen::Vector3d* scale_factors);
 
 }  // namespace colmap
 
