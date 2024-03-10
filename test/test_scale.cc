@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     std::cout << "=========================================================" << std::endl;
 
     Eigen::Vector3d scale_factors(1.0, 1.0, 1.0);
-    std::vector<bool> fix_scale{1, 0, 0};
+    std::vector<bool> fix_scale{1, 1, 0};
     // Eigen::Vector3d center(-1.217529, 1.931424, 10.653617);
     Eigen::Vector3d center(0.0, 0.0, 0.0);
     Eigen::Matrix4d Tow; 

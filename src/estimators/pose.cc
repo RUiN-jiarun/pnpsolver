@@ -424,24 +424,25 @@ bool RefineAbsolutePose(const AbsolutePoseRefinementOptions& options,
         }    
     
         // Scale parameterization
+        // FIXME: if fix two dimensions
         if (options.fix_x && options.fix_y && options.fix_z) {
             problem.SetParameterBlockConstant(scale_factors_data);
         } else {
+            std::vector<int> fix_index;
+
             if (options.fix_x) {
-                ceres::SubsetParameterization* scale_factors_paramterization = 
-                        new ceres::SubsetParameterization(3, std::vector<int>{0});
-                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
+                fix_index.emplace_back(0);
             } 
             if (options.fix_y) {
-                ceres::SubsetParameterization* scale_factors_paramterization = 
-                        new ceres::SubsetParameterization(3, std::vector<int>{1});
-                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
+                fix_index.emplace_back(1);
             } 
             if (options.fix_z) {
-                ceres::SubsetParameterization* scale_factors_paramterization = 
-                        new ceres::SubsetParameterization(3, std::vector<int>{2});
-                problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
+                fix_index.emplace_back(2);
+                
             }
+            ceres::SubsetParameterization* scale_factors_paramterization = 
+                        new ceres::SubsetParameterization(3, fix_index);
+            problem.SetParameterization(scale_factors_data, scale_factors_paramterization);
         }
     }
 
