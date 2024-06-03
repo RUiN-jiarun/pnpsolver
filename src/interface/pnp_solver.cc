@@ -67,7 +67,7 @@ bool solve_pnp_ransac(const std::vector<Eigen::Vector2d> &points2D,
     refine_options.refine_focal_length = false;
     refine_options.refine_extra_params = false;
     refine_options.max_num_iterations = 200;
-    refine_options.print_summary = false;
+    refine_options.print_summary = true;
     if (fix_scale[0])
         refine_options.fix_x = true;
     if (fix_scale[1])

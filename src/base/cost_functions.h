@@ -99,11 +99,15 @@ class BundleAdjustmentCostFunction {
         
         // Rotate and translate.
         T projection[3];
-        // ceres::UnitQuaternionRotatePoint(qvec, point3D, projection);
-        ceres::UnitQuaternionRotatePoint(qvec, point3D_transformed, projection);
+        ceres::UnitQuaternionRotatePoint(qvec, point3D, projection);
+        // ceres::UnitQuaternionRotatePoint(qvec, point3D_transformed, projection);
         projection[0] += tvec[0];
         projection[1] += tvec[1];
         projection[2] += tvec[2];
+
+        // 0531: scale here
+        projection[0] *= scale_factors[0];
+        projection[1] *= scale_factors[1];
 
         // Project to image plane.
         projection[0] /= projection[2];
